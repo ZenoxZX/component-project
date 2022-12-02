@@ -3,16 +3,18 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 
-public class HealthComponent : IHealthComponent
+public class HealthComponent
 {
     public float Health { get; private set; }
     public float MaxHealth { get; private set; }
+    public bool Invulnerable { get; set; } = false;
     public event Action OnDeath, OnRevive;
     public event Action<float> OnTakeDamage, OnHeal;
     public event Action<HealthChangeArgs> OnHealthChanged;
     private readonly bool useDebug;
+    private GameObject attachedGo;
 
-    public HealthComponent(float maxHealth, float? health = null, bool useDebug = false, Action<HealthChangeArgs> OnHealthChanged = null, Action<float> OnTakeDamage = null, Action<float> OnHeal = null, Action OnDeath = null, Action OnRevive = null)
+    public HealthComponent(float maxHealth, float? health = null, bool useDebug = false, Action<HealthChangeArgs> OnHealthChanged = null, Action<float> OnTakeDamage = null, Action<float> OnHeal = null, Action OnDeath = null, Action OnRevive = null, GameObject AttachedGo = null)
     {
         MaxHealth = maxHealth;
         Health = health ?? maxHealth;
@@ -23,6 +25,7 @@ public class HealthComponent : IHealthComponent
         if (OnRevive != null) this.OnRevive += OnRevive;
 
         this.useDebug = useDebug;
+        this.attachedGo = AttachedGo;
     }
 
     public string HealthString => Health.ToString("F0");
@@ -37,28 +40,31 @@ public class HealthComponent : IHealthComponent
         if (!storeOldHealth) Health = Math.Min(health ?? maxHealth, maxHealth);
         else Health = Math.Min(Health, MaxHealth);
         OnHealthChanged?.Invoke(new HealthChangeArgs(Health, MaxHealth));
+        LocalDebugger($"{(attachedGo != null ? $"{attachedGo.name}'s" : "Your")} max health changed to {maxHealth}!");
+    }
+
+    public void Kill()
+    {
+        if (Invulnerable) { LocalDebugger($"{(attachedGo != null ? $"{attachedGo.name} is" : "You are")} invulnerable, cant die!"); return; }
+        Health = 0;
+        OnDeath?.Invoke();
+        OnHealthChanged?.Invoke(new HealthChangeArgs(Health, MaxHealth));
+        LocalDebugger($"{(attachedGo != null ? attachedGo.name : "You")} died!");
     }
 
     public void TakeDamage(float value) 
     {
+        if (Invulnerable) { LocalDebugger($"{(attachedGo != null ? $"{attachedGo.name} is" : "You are")} invulnerable, cant take damage!"); return; }
         if (GetState == State.Alive)
         {
             Health -= value;
             OnTakeDamage?.Invoke(value);
-
-            if (Health <= 0)
-            {
-                Health = 0;
-                OnDeath?.Invoke();
-            }
-
+            LocalDebugger($"{(attachedGo != null ? attachedGo.name : "You")} took {value} damage. Health is {(Health > 0 ? Health : 0)}");
+            if (Health <= 0) { Kill(); return; }
             OnHealthChanged?.Invoke(new HealthChangeArgs(Health, MaxHealth));
         }
 
-        else
-        {
-            LocalDebugger("Your are death you cant take damage!");
-        }
+        else LocalDebugger($"{(attachedGo != null ? $"{attachedGo.name} is" : "You are")} death, cant take damage!");
     }
 
     public void Heal(float value)
@@ -70,20 +76,13 @@ public class HealthComponent : IHealthComponent
                 Health = Math.Min(Health + value, MaxHealth);
                 OnHeal?.Invoke(value);
                 OnHealthChanged?.Invoke(new HealthChangeArgs(Health, MaxHealth));
-
-                LocalDebugger($"[{value}] healed. Your health is [{Health}]");
+                LocalDebugger($"{(attachedGo != null ? attachedGo.name : "You")} {value} healed. Health is {Health}");
             }
 
-            else
-            {
-                LocalDebugger("Your health is already at Max Health");
-            }
+            else LocalDebugger($"{(attachedGo != null ? $"{attachedGo.name}'s" : "Your")} health is already at Max Health");
         }
 
-        else
-        {
-            LocalDebugger("Your are death you cant heal!");
-        }
+        else LocalDebugger($"{(attachedGo != null ? $"{attachedGo.name} is" : "You are")} death, cant heal!");
     }
 
     public void OverHeal(float value)
@@ -93,14 +92,10 @@ public class HealthComponent : IHealthComponent
             Health += value;
             OnHeal?.Invoke(value);
             OnHealthChanged?.Invoke(new HealthChangeArgs(Health, MaxHealth));
-
-            LocalDebugger($"[{value}] healed. Your health is [{Health}]");
+            LocalDebugger($"{(attachedGo != null ? attachedGo.name : "You")} {value} overhealed. Health is {Health}");
         }
 
-        else
-        {
-            LocalDebugger("Your are death you cant heal!");
-        }
+        else LocalDebugger($"{(attachedGo != null ? $"{attachedGo.name} is" : "You are")} death, cant heal!");
     }
 
     public void Revive(float? health = null)
@@ -111,9 +106,10 @@ public class HealthComponent : IHealthComponent
             Health = Math.Min(Health, MaxHealth);
             OnRevive?.Invoke();
             OnHealthChanged(new HealthChangeArgs(Health, MaxHealth));
+            LocalDebugger($"{(attachedGo != null ? $"{attachedGo.name} is" : "You are")} revived!");
         }
 
-        else LocalDebugger("Your are alive you cant revive!");
+        else LocalDebugger($"{(attachedGo != null ? $"{attachedGo.name} is" : "You are")} alive, cant revive!");
     }
 
     private void LocalDebugger(object message) { if (useDebug) Debug.Log(message); }
@@ -143,17 +139,4 @@ public interface IHealthComponentCallbacks
     public void OnDeath();
     public void OnRevive();
     public void OnHealthChanged(HealthChangeArgs args);
-}
-
-public interface IHealthComponent
-{
-    public float Health { get; }
-    public float MaxHealth { get; }
-    public string HealthString => Health.ToString("F0");
-    public string MaxHealthString => MaxHealth.ToString("F0");
-    public HealthComponent.State GetState { get; }
-    public bool IsWounded => Health > 0 && Health < MaxHealth;
-    public void TakeDamage(float value);
-    public void Heal(float value);
-    public void OverHeal(float value);
 }
