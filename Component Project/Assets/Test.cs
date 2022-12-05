@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using ZenoxZX.HealthSystem;
 
 public class Test : MonoBehaviour, IHealthComponentCallbacks, IDamageable, IHealable
 {
@@ -8,7 +9,7 @@ public class Test : MonoBehaviour, IHealthComponentCallbacks, IDamageable, IHeal
 
     private void Start()
     {
-        HealthComponent = new HealthComponent(100, useDebug: true, AttachedGo: gameObject);
+        HealthComponent = new HealthComponent(100, 100, useDebug: true, AttachedGo: gameObject);
         IDamageable damageable = this;
         IHealable healable = this;
 
