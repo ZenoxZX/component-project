@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.18028378, g: 0.22571412, b: 0.30692285, a: 1}
+  m_IndirectSpecularColor: {r: 0.18028352, g: 0.22571376, b: 0.30692244, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -236,6 +236,35 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d6f8bd2bd498e554592e7c5f663918d6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  damageType: 0
+  maxHealth: 100
+  maxArmor: 100
+  startFullHP: 1
+  startHP: 0
+  startArmor: 0
+  useCustomDynamicDamageRatio: 0
+  dynamicDamageRatio:
+    <HealthRatio>k__BackingField: 0.2
+    <ArmorRatio>k__BackingField: 0.4
+  useDebug: 0
+  OnDeath:
+    m_PersistentCalls:
+      m_Calls: []
+  OnRevive:
+    m_PersistentCalls:
+      m_Calls: []
+  OnTakeDamage:
+    m_PersistentCalls:
+      m_Calls: []
+  OnHeal:
+    m_PersistentCalls:
+      m_Calls: []
+  OnRestoreArmor:
+    m_PersistentCalls:
+      m_Calls: []
+  OnHealthChange:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!4 &1349756862
 Transform:
   m_ObjectHideFlags: 0

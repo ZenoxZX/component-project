@@ -13,36 +13,47 @@ namespace ZenoxZX.HealthSystem
         public float MaxArmor { get; private set; }
         public bool Invulnerable { get; set; } = false;
 
+        public DamageType damageType = DamageType.HealthOnly;
+        public DynamicDamageRatio dynamicDamageRatio = DynamicDamageRatio.Default;
+
         public event Action OnDeath, OnRevive, OnArmorDrain;
         public event Action<float> OnTakeDamage, OnHeal, OnRestoreArmor;
         public event Action<HealthChangeArgs> OnHealthChange;
         private readonly bool useDebug;
-        private GameObject attachedGo;
+        private readonly GameObject attachedGo;
 
         public HealthComponent(float maxHealth,
                                float maxArmor,
                                float? health = null,
                                float? armor = null,
+                               DamageType? damageType = null,
+                               DynamicDamageRatio? customDynamicDamageRatio = null,
                                bool useDebug = false,
+                               GameObject AttachedGo = null,
                                Action<HealthChangeArgs> OnHealthChange = null,
                                Action<float> OnTakeDamage = null,
                                Action<float> OnHeal = null,
+                               Action<float> OnRestoreArmor = null,
                                Action OnDeath = null,
-                               Action OnRevive = null,
-                               GameObject AttachedGo = null)
+                               Action OnRevive = null
+                              )
         {
             MaxHealth = maxHealth;
             Health = health ?? maxHealth;
             MaxArmor = maxArmor;
             Armor = armor ?? 0;
+
+            this.damageType = damageType ?? this.damageType;
+            dynamicDamageRatio = customDynamicDamageRatio ?? dynamicDamageRatio;
+            this.useDebug = useDebug;
+            attachedGo = AttachedGo;
+
             if (OnHealthChange != null) this.OnHealthChange += OnHealthChange;
             if (OnTakeDamage != null) this.OnTakeDamage += OnTakeDamage;
             if (OnHeal != null) this.OnHeal += OnHeal;
+            if (OnRestoreArmor != null) this.OnRestoreArmor += OnRestoreArmor;
             if (OnDeath != null) this.OnDeath += OnDeath;
             if (OnRevive != null) this.OnRevive += OnRevive;
-
-            this.useDebug = useDebug;
-            this.attachedGo = AttachedGo;
         }
 
         //~HealthComponent()
@@ -54,6 +65,8 @@ namespace ZenoxZX.HealthSystem
         public string MaxHealthString => MaxHealth.ToString("F0");
         public State GetState => Health > 0 ? State.Alive : State.Dead;
         public bool IsWounded => Health > 0 && Health < MaxHealth;
+        public bool HasArmor => Armor > 0;
+        public bool CanRestoreArmor => Armor < MaxArmor;
         public float HealthRatio => Health / MaxHealth;
 
         public void SetMaxHealth(float maxHealth, bool storeOldHealth = true, float? health = null)
@@ -69,19 +82,58 @@ namespace ZenoxZX.HealthSystem
         {
             if (Invulnerable) { LocalDebugger($"{(attachedGo != null ? $"{attachedGo.name} is" : "You are")} invulnerable, cant die!"); return; }
             Health = 0;
+            Armor = 0;
             OnDeath?.Invoke();
             OnHealthChange?.Invoke(new HealthChangeArgs(Health, MaxHealth, Armor, MaxArmor));
             LocalDebugger($"{(attachedGo != null ? attachedGo.name : "You")} died!");
         }
 
-        public void TakeDamage(float value)
+        public void TakeDamage(float value, DamageType? damageType = null)
         {
             if (Invulnerable) { LocalDebugger($"{(attachedGo != null ? $"{attachedGo.name} is" : "You are")} invulnerable, cant take damage!"); return; }
             if (GetState == State.Alive)
             {
-                Health -= value;
+                damageType ??= this.damageType;
+
+                switch (damageType)
+                {
+                    case DamageType.HealthOnly:
+
+                        Health -= value;
+
+                        break;
+
+                    case DamageType.ArmorFirst:
+
+                        if (value > Armor)
+                        {
+                            float remainDamage = value - Armor;
+                            Armor = 0;
+                            Health -= remainDamage;
+                        }
+
+                        else Armor -= value;
+
+                        break;
+
+                    case DamageType.Dynamic:
+
+                        if (HasArmor)
+                        {
+                            float armorDamage = value * dynamicDamageRatio.ArmorRatio;
+                            float healthDamage = value * dynamicDamageRatio.HealthRatio;
+                            Armor = Math.Max(Armor - armorDamage, 0);
+                            Health -= healthDamage; 
+                        }
+
+                        else Health -= value;
+
+                        break;
+                }
+
+
                 OnTakeDamage?.Invoke(value);
-                LocalDebugger($"{(attachedGo != null ? attachedGo.name : "You")} took {value} damage. Health is {(Health > 0 ? Health : 0)}");
+                LocalDebugger($"{(attachedGo != null ? attachedGo.name : "You")} took {value} damage. Health is {(Health > 0 ? Health : 0)}, Armor is {(Armor > 0 ? Armor : 0)}");
                 if (Health <= 0) { Kill(); return; }
                 OnHealthChange?.Invoke(new HealthChangeArgs(Health, MaxHealth, Armor, MaxArmor));
             }
@@ -101,7 +153,7 @@ namespace ZenoxZX.HealthSystem
                     LocalDebugger($"{(attachedGo != null ? attachedGo.name : "You")} {value} healed. Health is {Health}");
                 }
 
-                else LocalDebugger($"{(attachedGo != null ? $"{attachedGo.name}'s" : "Your")} health is already at Max Health");
+                else LocalDebugger($"{(attachedGo != null ? $"{attachedGo.name}'s" : "Your")} health is already at Max Health!");
             }
 
             else LocalDebugger($"{(attachedGo != null ? $"{attachedGo.name} is" : "You are")} death, cant heal!");
@@ -114,7 +166,7 @@ namespace ZenoxZX.HealthSystem
                 Health += value;
                 OnHeal?.Invoke(value);
                 OnHealthChange?.Invoke(new HealthChangeArgs(Health, MaxHealth, Armor, MaxArmor));
-                LocalDebugger($"{(attachedGo != null ? attachedGo.name : "You")} {value} overhealed. Health is {Health}");
+                LocalDebugger($"{(attachedGo != null ? attachedGo.name : "You")} {value} overhealed. Health is {Health}.");
             }
 
             else LocalDebugger($"{(attachedGo != null ? $"{attachedGo.name} is" : "You are")} death, cant heal!");
@@ -124,7 +176,14 @@ namespace ZenoxZX.HealthSystem
         {
             if (GetState == State.Alive)
             {
-                Armor = Math.Min(Armor + value, MaxArmor);
+                if (CanRestoreArmor)
+                {
+                    Armor = Math.Min(Armor + value, MaxArmor);
+                    OnRestoreArmor?.Invoke(value);
+                    LocalDebugger($"{(attachedGo != null ? attachedGo.name : "You")} {value} armor restored. Armor is {Armor}.");
+                }
+
+                else LocalDebugger($"{(attachedGo != null ? $"{attachedGo.name}'s" : "Your")} armor is already at Max Armor!");
             }
 
             else LocalDebugger($"{(attachedGo != null ? $"{attachedGo.name} is" : "You are")} death, cant restore armor!");
@@ -150,33 +209,69 @@ namespace ZenoxZX.HealthSystem
 
     public struct HealthChangeArgs
     {
-        public float health;
-        public float maxHealth;
-        public float armor;
-        public float maxArmor;
+        public readonly float Health { get; }
+        public readonly float MaxHealth { get; }
+        public readonly float Armor { get; }
+        public readonly float MaxArmor { get; }
 
         public HealthChangeArgs(float health, float maxHealth, float armor, float maxArmor)
         {
-            this.health = health;
-            this.maxHealth = maxHealth;
-            this.armor = armor;
-            this.maxArmor = maxArmor;
+            Health = health;
+            MaxHealth = maxHealth;
+            Armor = armor;
+            MaxArmor = maxArmor;
         }
 
-        public float HealthRatio => health / maxHealth;
-        public float ArmorRatio => armor / maxArmor;
-        public string HealthString => health.ToString("F0");
-        public string MaxHealthString => maxHealth.ToString("F0");
-        public string ArmorString => armor.ToString("F0");
-        public string MaxArmorString => maxArmor.ToString("F0");
+        public float HealthRatio => Health / MaxHealth;
+        public float ArmorRatio => Armor / MaxArmor;
+        public string HealthString => Health.ToString("F0");
+        public string MaxHealthString => MaxHealth.ToString("F0");
+        public string ArmorString => Armor.ToString("F0");
+        public string MaxArmorString => MaxArmor.ToString("F0");
+    }
+
+    [Serializable]
+    public struct DynamicDamageRatio
+    {
+        /// <summary>
+        /// Must be between 0 - 1 !
+        /// </summary>
+        [field: SerializeField]
+        [field: Tooltip("Damage ratio for Health from total damage")]
+        [field: Range(0, 1)]
+        public float HealthRatio { get; private set; }
+
+        /// <summary>
+        /// Must be between 0 - 1 !
+        /// </summary>
+        [field: SerializeField]
+        [field: Tooltip("Damage ratio for Armor from total damage")]
+        [field: Range(0, 1)]
+        public float ArmorRatio { get; private set; }
+
+        /// <summary>
+        /// Both parameters Must be between 0 - 1 !
+        /// </summary>
+        /// <param name="healthRatio"> Must be between 0 - 1 !</param>
+        /// <param name="armorRatio"> Must be between 0 - 1 !</param>
+        public DynamicDamageRatio(float healthRatio, float armorRatio)
+        {
+            HealthRatio = healthRatio;
+            ArmorRatio = armorRatio;
+        }
+
+        public static DynamicDamageRatio Default => new DynamicDamageRatio(.2f, .4f);
     }
 
     public interface IHealthComponentCallbacks
     {
         public void OnTakeDamage(float value);
         public void OnHeal(float value);
+        public void OnRestoreArmor(float value);
         public void OnDeath();
         public void OnRevive();
         public void OnHealthChanged(HealthChangeArgs args);
     }
+
+    public enum DamageType { HealthOnly, ArmorFirst, Dynamic }
 }
