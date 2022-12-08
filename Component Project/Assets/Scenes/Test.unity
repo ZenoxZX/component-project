@@ -236,17 +236,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d6f8bd2bd498e554592e7c5f663918d6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  damageType: 0
-  maxHealth: 100
-  maxArmor: 100
-  startFullHP: 1
-  startHP: 0
-  startArmor: 0
-  useCustomDynamicDamageRatio: 0
-  dynamicDamageRatio:
-    <HealthRatio>k__BackingField: 0.2
-    <ArmorRatio>k__BackingField: 0.4
-  useDebug: 0
+  drawType: 0
+  healthConfig_SO: {fileID: 0}
+  healthConfig:
+    damageType: 0
+    maxHealth: 100
+    maxArmor: 100
+    startFullHP: 1
+    startHP: 100
+    startArmor: 1
+    dynamicDamageRatio:
+      <HealthRatio>k__BackingField: 0.2
+      <ArmorRatio>k__BackingField: 0.4
+    useDebug: 0
+  B_OnDeath: 0
+  B_OnRevive: 0
+  B_OnTakeDamage: 0
+  B_OnHeal: 0
+  B_OnRestoreArmor: 0
+  B_OnHealthChange: 0
   OnDeath:
     m_PersistentCalls:
       m_Calls: []

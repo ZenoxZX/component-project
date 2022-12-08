@@ -273,5 +273,17 @@ namespace ZenoxZX.HealthSystem
         public void OnHealthChanged(HealthChangeArgs args);
     }
 
+    [Serializable]
+    public class HealthConfig
+    {      
+        public DamageType damageType = DamageType.HealthOnly;
+        public float maxHealth = 100, maxArmor = 100;
+        public bool startFullHP = true;
+        public float startHP = 0, startArmor = 0;
+        public DynamicDamageRatio dynamicDamageRatio = DynamicDamageRatio.Default;
+        public bool useDebug = false;
+    }
+
+    public enum DrawType { EditOnInspector, GetFromConfig }
     public enum DamageType { HealthOnly, ArmorFirst, Dynamic }
 }
