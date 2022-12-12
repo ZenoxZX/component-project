@@ -49,7 +49,7 @@ public class HealthSystemEditor : Editor
     {
         EditorGUILayout.BeginHorizontal();
         GUILayout.Label("Health Config");
-        drawType = (DrawType)GUILayout.Toolbar((int)drawType, Enum.GetNames(typeof(DrawType)));
+        drawType = (DrawType)GUILayout.Toolbar((int)drawType, Enum.GetNames(typeof(DrawType)).SplitCapitalsArray());
         EditorGUILayout.EndHorizontal();
         MyTarget.drawType = drawType;
         switch (drawType)

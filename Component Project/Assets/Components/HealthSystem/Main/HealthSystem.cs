@@ -13,7 +13,7 @@ public class HealthSystem : MonoBehaviour, IDamageable, IHealable
     private IHealable healable;
     public HealthConfig_SO healthConfig_SO;
     public HealthConfig healthConfig;
-    [HideInInspector] public bool B_OnDeath, B_OnRevive, B_OnTakeDamage, B_OnHeal, B_OnRestoreArmor, B_OnHealthChange;
+   
 
     #region UNITY EVENTS
 
@@ -29,7 +29,7 @@ public class HealthSystem : MonoBehaviour, IDamageable, IHealable
 
     #endregion
 
-    private void Start()
+    private void Awake()
     {
         healthConfig = drawType == DrawType.GetFromConfig && healthConfig_SO != null ? healthConfig_SO.healthConfig : healthConfig;
         float? startHP = healthConfig.startFullHP ? (float?)null : healthConfig.startHP;
@@ -51,4 +51,13 @@ public class HealthSystem : MonoBehaviour, IDamageable, IHealable
         damageable = this;
         healable = this;
     }
+
+    #region CUSTOM EDITOR
+
+    /// <summary>
+    /// Custom editor variables 
+    /// </summary>
+    [HideInInspector] public bool B_OnDeath, B_OnRevive, B_OnTakeDamage, B_OnHeal, B_OnRestoreArmor, B_OnHealthChange;
+
+    #endregion
 }

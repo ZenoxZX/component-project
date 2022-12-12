@@ -69,13 +69,27 @@ namespace ZenoxZX.HealthSystem
         public bool CanRestoreArmor => Armor < MaxArmor;
         public float HealthRatio => Health / MaxHealth;
 
-        public void SetMaxHealth(float maxHealth, bool storeOldHealth = true, float? health = null)
+        public void SetMaxHealth(float maxHealth, float? health = null)
         {
             MaxHealth = maxHealth;
-            if (!storeOldHealth) Health = Math.Min(health ?? maxHealth, maxHealth);
-            else Health = Math.Min(Health, MaxHealth);
+            Health = Math.Min(health ?? Health, MaxHealth);
             OnHealthChange?.Invoke(new HealthChangeArgs(Health, MaxHealth, Armor, MaxArmor));
             LocalDebugger($"{(attachedGo != null ? $"{attachedGo.name}'s" : "Your")} max health changed to {maxHealth}!");
+        }
+
+        public void SetMaxArmor(float maxArmor, float? armor = null)
+        {
+            MaxArmor = maxArmor;
+            Armor = Math.Min(armor ?? Armor, MaxArmor);
+            OnHealthChange?.Invoke(new HealthChangeArgs(Health, MaxHealth, Armor, MaxArmor));
+            LocalDebugger($"{(attachedGo != null ? $"{attachedGo.name}'s" : "Your")} max armor changed to {maxArmor}!");
+        }
+
+        public void SetMaxHealthAndArmor(float maxHealth, float maxArmor, float? health = null, float? armor = null)
+        {
+            SetMaxHealth(maxHealth, health);
+            SetMaxArmor(maxArmor, armor);
+            LocalDebugger($"{(attachedGo != null ? $"{attachedGo.name}'s" : "Your")} max health changed to {maxHealth} and max armor changed to {maxArmor}!");
         }
 
         public void Kill()
@@ -189,12 +203,12 @@ namespace ZenoxZX.HealthSystem
             else LocalDebugger($"{(attachedGo != null ? $"{attachedGo.name} is" : "You are")} death, cant restore armor!");
         }
 
-        public void Revive(float? health = null)
+        public void Revive(float? health = null, float? armor = null)
         {
             if (GetState == State.Dead)
             {
-                Health = health ?? MaxHealth;
-                Health = Math.Min(Health, MaxHealth);
+                Health = Math.Min(health ?? Health, MaxHealth);
+                Armor = Math.Min(armor ?? Armor, MaxArmor);
                 OnRevive?.Invoke();
                 OnHealthChange(new HealthChangeArgs(Health, MaxHealth, Armor, MaxArmor));
                 LocalDebugger($"{(attachedGo != null ? $"{attachedGo.name} is" : "You are")} revived!");

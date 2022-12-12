@@ -4,7 +4,7 @@ namespace ZenoxZX.HealthSystem
     public interface IDamageable
     {
         public HealthComponent HealthComponent { get; }
-        public void TakeDamage(float value) => HealthComponent.TakeDamage(value);
+        public void TakeDamage(float value, DamageType? damageType = null) => HealthComponent.TakeDamage(value, damageType);
         public void Kill() => HealthComponent.Kill();
 
         public HealthComponent.State GetState => HealthComponent.GetState;
