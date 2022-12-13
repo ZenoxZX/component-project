@@ -23,6 +23,7 @@ public class HealthSystemEditor : Editor
     private void OnEnable()
     {
         Debug.Log("OnEnable");
+        drawType = MyTarget.drawType;
         m_OnDeathEvent = serializedObject.FindProperty(nameof(MyTarget.OnDeath));
         m_OnReviveEvent = serializedObject.FindProperty(nameof(MyTarget.OnRevive));
         m_OnTakeDamageEvent = serializedObject.FindProperty(nameof(MyTarget.OnTakeDamage));

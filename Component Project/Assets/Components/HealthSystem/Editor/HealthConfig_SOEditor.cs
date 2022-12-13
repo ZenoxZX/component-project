@@ -11,14 +11,11 @@ public class HealthConfig_SOEditor : Editor
     HealthConfig_SO MyTarget => (HealthConfig_SO)target;
     Texture Logo => Resources.Load<Texture>("1");
 
-
-
     public override void OnInspectorGUI()
     {
         DrawLabel();
         DrawInspector();
     }
-
 
     private void DrawLabel()
     {

@@ -7,7 +7,8 @@ using System;
 public class HealthPresenter : MonoBehaviour
 {
     public PresentType presentType = PresentType.Text;
-    public ImageType imageType;
+    public ImageType healthImageType;
+    public ImageType armorImageType;
     public TextType textType = TextType.MainValue;
     public AffixType affixType = AffixType.None;
     public string healthPrefix, armorPrefix, healthSuffix, armorSuffix;
@@ -71,97 +72,67 @@ public class HealthPresenter : MonoBehaviour
 
                 switch (affixType)
                 {
-                    case AffixType.None:
-
-                        healthTMP.text = $"{args.Health}";
-                        armorTMP.text = $"{args.Armor}";
-
-                        break;
-
-                    case AffixType.Prefix:
-
-                        healthTMP.text = $"{healthPrefix}{args.Health}";
-                        armorTMP.text = $"{armorPrefix}{args.Armor}";
-
-                        break;
-
-                    case AffixType.Suffix:
-
-                        healthTMP.text = $"{args.Health}{healthSuffix}";
-                        armorTMP.text = $"{args.Armor}{armorSuffix}";
-
-                        break;
-                    case AffixType.Both:
-
-                        healthTMP.text = $"{healthPrefix}{args.Health}{healthSuffix}";
-                        armorTMP.text = $"{armorPrefix}{args.Armor}{armorSuffix}";
-
-                        break;
+                    case AffixType.None: healthTMP.text = $"{args.Health}"; break;
+                    case AffixType.Prefix: healthTMP.text = $"{healthPrefix}{args.Health}"; break;
+                    case AffixType.Suffix: healthTMP.text = $"{args.Health}{healthSuffix}"; break;
+                    case AffixType.Both: healthTMP.text = $"{healthPrefix}{args.Health}{healthSuffix}"; break;
                 }
+
+                if (target.healthConfig.damageType == DamageType.HealthOnly || armorTMP == null) break;
+
+                switch (affixType)
+                {
+                    case AffixType.None: armorTMP.text = $"{args.Armor}"; break;
+                    case AffixType.Prefix: armorTMP.text = $"{armorPrefix}{args.Armor}"; break;
+                    case AffixType.Suffix: armorTMP.text = $"{args.Armor}{armorSuffix}"; break;
+                    case AffixType.Both: armorTMP.text = $"{armorPrefix}{args.Armor}{armorSuffix}"; break;
+                }
+
                 break;
 
             case TextType.BothValue:
 
                 switch (affixType)
                 {
-                    case AffixType.None:
-
-                        healthTMP.text = $"{args.Health} / {args.MaxHealth}";
-                        armorTMP.text = $"{args.Armor} / {args.MaxArmor}";
-
-                        break;
-
-                    case AffixType.Prefix:
-
-                        healthTMP.text = $"{healthPrefix}{args.Health} / {args.MaxHealth}";
-                        armorTMP.text = $"{armorPrefix}{args.Armor} / {args.MaxArmor}";
-
-                        break;
-
-                    case AffixType.Suffix:
-
-                        healthTMP.text = $"{args.Health} / {args.MaxHealth}{healthSuffix}";
-                        armorTMP.text = $"{args.Armor} / {args.MaxArmor}{armorSuffix}";
-
-                        break;
-                    case AffixType.Both:
-
-                        healthTMP.text = $"{healthPrefix}{args.Health} / {args.MaxHealth}{healthSuffix}";
-                        armorTMP.text = $"{armorPrefix}{args.Armor} / {args.MaxArmor}{armorSuffix}";
-
-                        break;
+                    case AffixType.None: healthTMP.text = $"{args.Health} / {args.MaxHealth}"; break;
+                    case AffixType.Prefix: healthTMP.text = $"{healthPrefix}{args.Health} / {args.MaxHealth}"; break;
+                    case AffixType.Suffix: healthTMP.text = $"{args.Health} / {args.MaxHealth}{healthSuffix}"; break;
+                    case AffixType.Both: healthTMP.text = $"{healthPrefix}{args.Health} / {args.MaxHealth}{healthSuffix}"; break;
                 }
+
+                if (target.healthConfig.damageType == DamageType.HealthOnly || armorTMP == null) break;
+
+                switch (affixType)
+                {
+                    case AffixType.None: armorTMP.text = $"{args.Armor} / {args.MaxArmor}"; break;
+                    case AffixType.Prefix: armorTMP.text = $"{armorPrefix}{args.Armor} / {args.MaxArmor}"; break;
+                    case AffixType.Suffix: armorTMP.text = $"{args.Armor} / {args.MaxArmor}{armorSuffix}"; break;
+                    case AffixType.Both: armorTMP.text = $"{armorPrefix}{args.Armor} / {args.MaxArmor}{armorSuffix}"; break;
+                }
+
                 break;
         }
     }
 
     private void DrawImage(HealthChangeArgs args)
     {
-        switch (imageType)
+        switch (healthImageType)
         {
-            case ImageType.BothSingle:
+            case ImageType.Single: healthImage.fillAmount = args.HealthRatio; break;
+            case ImageType.Multiple: CalculateMultipleImages(ref healthImages_A, args); break;
+        }
 
-                healthImage.fillAmount = args.HealthRatio;
-                armorImage.fillAmount = args.ArmorRatio;
+        if (target.healthConfig.damageType == DamageType.HealthOnly) return;
 
+        switch (armorImageType)
+        {
+            case ImageType.Single:
+                if (armorImage == null) return;
+                armorImage.fillAmount = args.ArmorRatio; 
                 break;
-            case ImageType.HealthSingleArmorMultiple:
-
-                healthImage.fillAmount = args.HealthRatio;
-                CalculateMultipleImages(ref armorImages_A, args, false);
-
-                break;
-            case ImageType.HealthMultipleArmorSingle:
-
-                CalculateMultipleImages(ref healthImages_A, args);
-                armorImage.fillAmount = args.ArmorRatio;
-
-                break;
-            case ImageType.BothMultiple:
-
-                CalculateMultipleImages(ref healthImages_A, args);
-                CalculateMultipleImages(ref armorImages_A, args, false);
-
+            case ImageType.Multiple:
+                if (armorImages_A == null) return;
+                CalculateMultipleImages(ref armorImages_A, args, false); 
                 break;
         }
     }
@@ -180,7 +151,7 @@ public class HealthPresenter : MonoBehaviour
         }
     }
 
-    public enum ImageType { BothSingle, HealthSingleArmorMultiple, HealthMultipleArmorSingle, BothMultiple }
+    public enum ImageType { Single, Multiple }
     public enum TextType { MainValue, BothValue }
     public enum AffixType { None, Prefix, Suffix, Both }
     public enum PresentType { Text, Image, Both }
