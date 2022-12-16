@@ -10,6 +10,7 @@ public class HealthPresenterEditor : Editor
     HealthPresenter MyTarget => (HealthPresenter)target;
     Texture Logo => Resources.Load<Texture>("1");
 
+    private SerializedProperty m_TargetHealthSystem;
     private SerializedProperty m_HealthImage, m_HealthImages;
     private SerializedProperty m_ArmorImage, m_ArmorImages;
     private SerializedProperty m_HealthPrefix, m_HealthSuffix;
@@ -19,10 +20,11 @@ public class HealthPresenterEditor : Editor
     private void OnEnable()
     {
         HealthPresenter healthPresenter = MyTarget;
+        m_TargetHealthSystem = serializedObject.FindProperty(nameof(healthPresenter.target));
         m_HealthImage = serializedObject.FindProperty(nameof(healthPresenter.healthImage));
-        m_HealthImages = serializedObject.FindProperty(nameof(healthPresenter.healthImages_A));
+        m_HealthImages = serializedObject.FindProperty(nameof(healthPresenter.healthImages));
         m_ArmorImage = serializedObject.FindProperty(nameof(healthPresenter.armorImage));
-        m_ArmorImages = serializedObject.FindProperty(nameof(healthPresenter.armorImages_A));
+        m_ArmorImages = serializedObject.FindProperty(nameof(healthPresenter.armorImages));
 
         m_HealthPrefix = serializedObject.FindProperty(nameof(healthPresenter.healthPrefix));
         m_HealthSuffix = serializedObject.FindProperty(nameof(healthPresenter.healthSuffix));
@@ -36,9 +38,11 @@ public class HealthPresenterEditor : Editor
     public override void OnInspectorGUI()
     {
         HealthPresenter healthPresenter = MyTarget;
-        base.OnInspectorGUI();
+        serializedObject.Update();
+      //  base.OnInspectorGUI();
         DrawLabel();
         DrawInspector(healthPresenter);
+        serializedObject.ApplyModifiedProperties();
     }
 
     private void DrawLabel()
@@ -49,6 +53,15 @@ public class HealthPresenterEditor : Editor
 
     private void DrawInspector(HealthPresenter healthPresenter)
     {
+        EditorGUILayout.PropertyField(m_TargetHealthSystem);
+        serializedObject.ApplyModifiedProperties();
+        if (m_TargetHealthSystem.objectReferenceValue == null)
+        {
+            EditorGUILayout.Space(5);
+            EditorGUILayout.HelpBox("Target Health System is missing!", MessageType.Error);
+            return;
+        }
+
         healthPresenter.presentType = (HealthPresenter.PresentType)EditorGUILayout.EnumPopup("Present Type", healthPresenter.presentType);
         DrawText(healthPresenter);
         DrawHealthImage(healthPresenter);
@@ -63,41 +76,78 @@ public class HealthPresenterEditor : Editor
         {
             var healthConfig = healthPresenter.target.drawType == DrawType.GetFromConfig && healthPresenter.target.healthConfig_SO != null ? healthPresenter.target.healthConfig_SO.healthConfig : healthPresenter.target.healthConfig;
 
-
-            if (healthConfig.damageType == DamageType.HealthOnly)
-            {
-                healthPresenter.healthImageType = (HealthPresenter.ImageType)EditorGUILayout.EnumPopup("Health Image Type", healthPresenter.healthImageType);
-                EditorGUILayout.Space(5);
-                DrawHP();
-            }
-
-            else
-            {
-                healthPresenter.armorImageType = (HealthPresenter.ImageType)EditorGUILayout.EnumPopup("Armor Image Type", healthPresenter.armorImageType);
-                EditorGUILayout.Space(5);
-                DrawHP();
-                DrawMP();
-            }
-
-
+            healthPresenter.healthImageType = (HealthPresenter.ImageType)EditorGUILayout.EnumPopup("Health Image Type", healthPresenter.healthImageType);
+            if (healthConfig.damageType != DamageType.HealthOnly) healthPresenter.armorImageType = (HealthPresenter.ImageType)EditorGUILayout.EnumPopup("Armor Image Type", healthPresenter.armorImageType);
+            DrawHP();
+            if (healthConfig.damageType != DamageType.HealthOnly) DrawMP();
         }
 
         void DrawHP()
         {
+            EditorGUILayout.Space(5);
+
             switch (healthPresenter.healthImageType)
             {
-                case HealthPresenter.ImageType.Single: EditorGUILayout.PropertyField(m_HealthImage); break;
-                case HealthPresenter.ImageType.Multiple: EditorGUILayout.PropertyField(m_HealthImages); break;
+                case HealthPresenter.ImageType.Single: 
+
+                    EditorGUILayout.PropertyField(m_HealthImage); 
+                    if(m_HealthImage.objectReferenceValue == null) EditorGUILayout.HelpBox("Health Image is missing!", MessageType.Error);
+                    break;
+
+                case HealthPresenter.ImageType.Multiple: 
+
+                    EditorGUILayout.PropertyField(m_HealthImages);
+                    if (m_HealthImages.arraySize == 0) EditorGUILayout.HelpBox("Health Images is empty!", MessageType.Error);
+                    else
+                    {
+                        for (int i = 0; i < m_HealthImages.arraySize; i++)
+                        {
+                            SerializedProperty property = m_HealthImages.GetArrayElementAtIndex(i);
+                            if (property.objectReferenceValue == null)
+                            {
+                                EditorGUILayout.HelpBox("Health Images has empty field(s)!", MessageType.Error);
+                                return;
+                            }
+                        }
+                    }
+                    break;
             }
+
+            EditorGUILayout.Space(5);
         }
 
         void DrawMP()
         {
+            EditorGUILayout.Space(5);
+
             switch (healthPresenter.armorImageType)
             {
-                case HealthPresenter.ImageType.Single: EditorGUILayout.PropertyField(m_ArmorImage); break;
-                case HealthPresenter.ImageType.Multiple: EditorGUILayout.PropertyField(m_ArmorImages); break;
+                case HealthPresenter.ImageType.Single:
+
+                    EditorGUILayout.PropertyField(m_ArmorImage);
+                    if (m_ArmorImage.objectReferenceValue == null) EditorGUILayout.HelpBox("Armor Image is missing!", MessageType.Error);
+                    break;
+
+                case HealthPresenter.ImageType.Multiple:
+                    
+                    EditorGUILayout.PropertyField(m_ArmorImages);
+                    if (m_ArmorImages.arraySize == 0) EditorGUILayout.HelpBox("Armor Images is empty!", MessageType.Error);
+                    else
+                    {
+                        for (int i = 0; i < m_ArmorImages.arraySize; i++)
+                        {
+                            SerializedProperty property = m_ArmorImages.GetArrayElementAtIndex(i);
+                            if (property.objectReferenceValue == null)
+                            {
+                                EditorGUILayout.HelpBox("Armor Images has empty field(s)!", MessageType.Error);
+                                return;
+                            }
+                        }
+                    }
+                    break;
             }
+
+            EditorGUILayout.Space(5);
         }
     }
 
@@ -110,8 +160,12 @@ public class HealthPresenterEditor : Editor
             var healthConfig = healthPresenter.target.drawType == DrawType.GetFromConfig && healthPresenter.target.healthConfig_SO != null ? healthPresenter.target.healthConfig_SO.healthConfig : healthPresenter.target.healthConfig;
 
             EditorGUILayout.PropertyField(m_HealthTMP);
-            if (m_HealthTMP.objectReferenceValue == null) EditorGUILayout.HelpBox("Health TMP is Null", MessageType.Error);
-            if (healthConfig.damageType != DamageType.HealthOnly) EditorGUILayout.PropertyField(m_ArmorTMP);
+            if (healthConfig.damageType != DamageType.HealthOnly)
+            {
+                EditorGUILayout.PropertyField(m_ArmorTMP);
+                if(m_ArmorTMP.objectReferenceValue == null) EditorGUILayout.HelpBox("Armor TMP is missing!", MessageType.Error);
+            }
+            if (m_HealthTMP.objectReferenceValue == null) EditorGUILayout.HelpBox("Health TMP is missing!", MessageType.Error);
             EditorGUILayout.Space(5);
             healthPresenter.textType = (HealthPresenter.TextType)EditorGUILayout.EnumPopup("Text Type", healthPresenter.textType);
             healthPresenter.affixType = (HealthPresenter.AffixType)EditorGUILayout.EnumPopup("Affix Type", healthPresenter.affixType);

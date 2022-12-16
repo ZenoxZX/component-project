@@ -14,7 +14,7 @@ public class HealthPresenter : MonoBehaviour
     public string healthPrefix, armorPrefix, healthSuffix, armorSuffix;
     public HealthSystem target;
     public Image healthImage, armorImage;
-    public Image[] healthImages_A, armorImages_A; 
+    public Image[] healthImages, armorImages; 
     public TextMeshProUGUI healthTMP, armorTMP;
     private bool started = false, isSub = false;
     private bool CanSub => started && !isSub;
@@ -119,7 +119,7 @@ public class HealthPresenter : MonoBehaviour
         switch (healthImageType)
         {
             case ImageType.Single: healthImage.fillAmount = args.HealthRatio; break;
-            case ImageType.Multiple: CalculateMultipleImages(ref healthImages_A, args); break;
+            case ImageType.Multiple: CalculateMultipleImages(ref healthImages, args); break;
         }
 
         if (target.healthConfig.damageType == DamageType.HealthOnly) return;
@@ -131,8 +131,8 @@ public class HealthPresenter : MonoBehaviour
                 armorImage.fillAmount = args.ArmorRatio; 
                 break;
             case ImageType.Multiple:
-                if (armorImages_A == null) return;
-                CalculateMultipleImages(ref armorImages_A, args, false); 
+                if (armorImages == null) return;
+                CalculateMultipleImages(ref armorImages, args, false); 
                 break;
         }
     }

@@ -1663,9 +1663,9 @@ MonoBehaviour:
     damageType: 0
     maxHealth: 100
     maxArmor: 100
-    startFullHP: 0
+    startFullHP: 1
     startHP: 100
-    startArmor: 40
+    startArmor: 0
     dynamicDamageRatio:
       <HealthRatio>k__BackingField: 0.2
       <ArmorRatio>k__BackingField: 0.4
@@ -1688,7 +1688,7 @@ MonoBehaviour:
   OnHealthChange:
     m_PersistentCalls:
       m_Calls: []
-  B_OnDeath: 0
+  B_OnDeath: 1
   B_OnRevive: 0
   B_OnTakeDamage: 0
   B_OnHeal: 0
@@ -2161,7 +2161,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8651e08a3721e364ea6932d9afa6f95a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  presentType: 2
+  presentType: 1
   healthImageType: 0
   armorImageType: 0
   textType: 0
@@ -2173,10 +2173,10 @@ MonoBehaviour:
   target: {fileID: 1349756861}
   healthImage: {fileID: 0}
   armorImage: {fileID: 0}
-  healthImages_A: []
-  armorImages_A: []
-  healthTMP: {fileID: 0}
-  armorTMP: {fileID: 0}
+  healthImages: []
+  armorImages: []
+  healthTMP: {fileID: 110320032}
+  armorTMP: {fileID: 110320032}
 --- !u!1 &2079379376
 GameObject:
   m_ObjectHideFlags: 0
